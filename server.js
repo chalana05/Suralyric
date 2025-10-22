@@ -24,25 +24,26 @@ const io = socketIo(server, {
 });
 
 // Middleware
-app.use(cors({
-  origin: [
-    process.env.CLIENT_URL || "http://localhost:3000",
-    "https://suralyric.netlify.app"
-  ],
+const allowedOrigins = [
+  process.env.CLIENT_URL || "http://localhost:3000",
+  "https://suralyric.netlify.app"
+];
+
+const corsOptions = {
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // allow non-browser or same-origin
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(null, false);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 200
-}));
+  optionsSuccessStatus: 204,
+  maxAge: 86400 // cache preflight 24h
+};
 
-// Handle preflight requests explicitly
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
-});
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
