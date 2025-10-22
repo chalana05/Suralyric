@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Music, User, Lock, Eye, EyeOff } from 'lucide-react';
+import { getApiUrl } from '../utils/api';
 
 export default function LoginForm({ onLogin }) {
   const [username, setUsername] = useState('');
@@ -15,8 +16,7 @@ export default function LoginForm({ onLogin }) {
     setIsLoading(true);
 
     try {
-      const serverUrl = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
-      const response = await fetch(`${serverUrl}/api/auth/login`, {
+      const response = await fetch(getApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -14,7 +14,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: [
+      process.env.CLIENT_URL || "http://localhost:3000",
+      "https://suralyric.netlify.app"
+    ],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -22,7 +25,10 @@ const io = socketIo(server, {
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  origin: [
+    process.env.CLIENT_URL || "http://localhost:3000",
+    "https://suralyric.netlify.app"
+  ],
   credentials: true
 }));
 app.use(express.json());

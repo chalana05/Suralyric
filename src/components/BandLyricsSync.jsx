@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Music, Users, FileText, Upload, Monitor, ArrowLeft, Maximize2, Minimize2, X, LogOut, User } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { getServerUrl, getApiUrl } from '../utils/api';
 
 export default function BandLyricsSync({ user, onLogout }) {
   const [role, setRole] = useState('');
@@ -44,7 +45,7 @@ export default function BandLyricsSync({ user, onLogout }) {
 
   // Initialize socket connection
   useEffect(() => {
-    const serverUrl = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
+    const serverUrl = getServerUrl();
     console.log('Connecting to server:', serverUrl);
     const newSocket = io(serverUrl, {
       transports: ['websocket', 'polling'],
@@ -82,8 +83,7 @@ export default function BandLyricsSync({ user, onLogout }) {
       if (fileData && fileData.fileName) {
         setCurrentFile(fileData);
         // Use storedFileName for the actual file access, but display original fileName
-        const serverUrl = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
-        setFilePreview(`${serverUrl}/uploads/${fileData.storedFileName}`);
+        setFilePreview(`${getServerUrl()}/uploads/${fileData.storedFileName}`);
         addMessage(`📄 "${fileData.fileName}" received from master`);
         setIsExtractingText(false);
       }
@@ -136,8 +136,7 @@ export default function BandLyricsSync({ user, onLogout }) {
 
       try {
         const token = localStorage.getItem('token');
-        const serverUrl = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
-        const response = await fetch(`${serverUrl}/api/upload`, {
+        const response = await fetch(getApiUrl('/api/upload'), {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -152,8 +151,7 @@ export default function BandLyricsSync({ user, onLogout }) {
           // Manually trigger file display for master device
           if (result.file) {
             setCurrentFile(result.file);
-            const serverUrl = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
-            setFilePreview(`${serverUrl}/uploads/${result.file.storedFileName}`);
+            setFilePreview(`${getServerUrl()}/uploads/${result.file.storedFileName}`);
           }
         } else {
           const errorData = await response.json();
@@ -333,7 +331,7 @@ export default function BandLyricsSync({ user, onLogout }) {
                 />
               ) : currentFile.mimeType === 'application/pdf' ? (
                 <iframe
-                  src={`${process.env.REACT_APP_SERVER_URL || 'http://localhost:3001'}/uploads/${currentFile.storedFileName}`}
+                  src={`${getServerUrl()}/uploads/${currentFile.storedFileName}`}
                   className="w-full h-full"
                   title="PDF Viewer"
                 />
@@ -587,7 +585,7 @@ export default function BandLyricsSync({ user, onLogout }) {
                            </div>
                            <div className="w-full h-80 sm:h-96 border rounded-lg overflow-hidden">
                              <iframe
-                               src={`${process.env.REACT_APP_SERVER_URL || 'http://localhost:3001'}/uploads/${currentFile.storedFileName}`}
+                  src={`${getServerUrl()}/uploads/${currentFile.storedFileName}`}
                                className="w-full h-full"
                                title="PDF Viewer"
                              />
