@@ -378,17 +378,6 @@ export default function BandLyricsSync({ user, onLogout }) {
               
               {/* User info and logout button */}
               <div className="flex items-center gap-3">
-                {user && (
-                  <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
-                    <User className="w-4 h-4 text-purple-300" />
-                    <div className="text-right">
-                      <div className="text-white font-semibold text-sm">{user.displayName}</div>
-                      <div className="text-purple-300 text-xs">{user.role}</div>
-                    </div>
-                  </div>
-                )}
-                
-                
                 {/* Connection status */}
                 {sessionId && (
                   <div className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
@@ -420,7 +409,7 @@ export default function BandLyricsSync({ user, onLogout }) {
           /* Role Selection */
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 lg:p-12 border border-white/20">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-white">Welcome, {user?.displayName}!</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Welcome, Sura!</h2>
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 active:bg-red-500/40 text-red-300 hover:text-red-200 px-3 py-2 rounded-lg transition-all"
