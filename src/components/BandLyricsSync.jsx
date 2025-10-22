@@ -141,6 +141,7 @@ export default function BandLyricsSync({ user, onLogout }) {
           headers: {
             'Authorization': `Bearer ${token}`
           },
+          credentials: 'include',
           body: formData,
         });
 
