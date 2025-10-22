@@ -22,6 +22,7 @@ export default function LoginForm({ onLogin }) {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ username, password }),
       });
 
