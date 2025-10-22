@@ -1,26 +1,34 @@
-# Use Node.js 18 Alpine as base image
-FROM node:18-alpine
+## Multi-stage build to avoid copying host node_modules and ensure clean perms
 
-# Set working directory
+# 1) Install all deps (including dev) for building
+FROM node:18-alpine AS deps
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
+# 2) Build the React app
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Build the React app
 RUN npm run build
 
-# Install production dependencies
+# 3) Production runtime with only prod deps
+FROM node:18-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
-# Expose port
-EXPOSE 3000
+# Copy server and built static assets
+COPY --from=builder /app/build ./build
+COPY server.js ./server.js
 
-# Start the server
+# Optional: keep uploads dir writable at runtime
+RUN mkdir -p /app/uploads
+
+# Expose API/server port (server listens on 3001 by default)
+EXPOSE 3001
+
 CMD ["npm", "run", "production"]
