@@ -10,8 +10,8 @@ export const getServerUrl = () => {
     return 'http://localhost:3001';
   }
   
-  // For production - Railway URL
-  return 'https://web-production-d2029.up.railway.app';
+  // For production - Railway URL (update to your deployment)
+  return 'https://web-production-b359.up.railway.app';
 };
 
 export const getApiUrl = (endpoint) => {
