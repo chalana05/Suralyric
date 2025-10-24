@@ -5,7 +5,7 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const pdfParse = require('pdf-parse');
+const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
 const { createWorker } = require('tesseract.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -182,10 +182,19 @@ async function extractTextFromFile(filePath, mimeType) {
     
     if (mimeType === 'application/pdf') {
       const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdfParse(dataBuffer);
-      const extractedText = data.text.trim();
-      console.log(`PDF text extraction completed. Text length: ${extractedText.length}`);
-      return extractedText;
+      const pdf = await pdfjsLib.getDocument({ data: dataBuffer }).promise;
+      let extractedText = '';
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        extractedText += pageText + '\n';
+      }
+      
+      const finalText = extractedText.trim();
+      console.log(`PDF text extraction completed. Text length: ${finalText.length}`);
+      return finalText;
     } else if (mimeType.startsWith('image/')) {
       console.log('Starting OCR processing for image...');
       const worker = await createWorker('sin+eng'); // Support Sinhala and English
@@ -332,10 +341,16 @@ app.use('/uploads', express.static(uploadsDir));
 
 // Serve static files from React build in production
 if (process.env.NODE_ENV === 'production') {
+  // Serve static files from the React build directory
   app.use(express.static(path.join(__dirname, 'build')));
   
   // Handle React routing, return all requests to React app
+  // But exclude API routes
   app.get('*', (req, res) => {
+    // Don't serve React app for API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ message: 'API endpoint not found' });
+    }
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
   });
 }
@@ -350,7 +365,18 @@ app.get('/api/health', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`WebSocket server ready for connections`);
+
+// Add error handling for server startup
+server.on('error', (error) => {
+  console.error('Server error:', error);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use`);
+  }
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 WebSocket server ready for connections`);
+  console.log(`📁 Uploads directory: ${uploadsDir}`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
