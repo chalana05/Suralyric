@@ -6,6 +6,9 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
+
+// Configure pdfjs-dist for Node.js environment
+pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve('pdfjs-dist/legacy/build/pdf.worker.js');
 const { createWorker } = require('tesseract.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -355,13 +358,35 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Root endpoint for basic connectivity test
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Suralyric API Server',
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    connectedDevices,
-    currentFile: currentFile ? currentFile.fileName : null
-  });
+  try {
+    res.status(200).json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      connectedDevices,
+      currentFile: currentFile ? currentFile.fileName : null,
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      status: 'ERROR', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3001;
@@ -372,11 +397,34 @@ server.on('error', (error) => {
   if (error.code === 'EADDRINUSE') {
     console.error(`Port ${PORT} is already in use`);
   }
+  process.exit(1);
 });
 
+// Ensure server is ready before starting
+let serverReady = false;
+
 server.listen(PORT, '0.0.0.0', () => {
+  serverReady = true;
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 WebSocket server ready for connections`);
   console.log(`📁 Uploads directory: ${uploadsDir}`);
   console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✅ Health check available at: http://0.0.0.0:${PORT}/api/health`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
