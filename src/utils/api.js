@@ -11,9 +11,10 @@ export const getServerUrl = () => {
   }
   
   // For production - Railway URL (default fallback if no env var set)
-  return 'https://web-production-d2029.up.railway.app';
+  return 'https://web-production-3716e.up.railway.app';
 };
 
 export const getApiUrl = (endpoint) => {
   return `${getServerUrl()}${endpoint}`;
 };
+      
